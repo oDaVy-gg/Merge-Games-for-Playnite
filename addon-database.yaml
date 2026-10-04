@@ -1,0 +1,16 @@
+AddonId: MergeGames_8f04d1df-90af-43ef-a0d0-f23e6514f6f9
+Type: Generic
+Name: Merge Games
+Author: OpenAI e oDaVy_gg
+ShortDescription: Mescla duas entradas do Playnite preservando metadados, ROMs, mídias e histórico.
+InstallerManifestUrl: https://raw.githubusercontent.com/oDaVy-gg/Merge-Games-for-Playnite/main/installer.yaml
+SourceUrl: https://github.com/oDaVy-gg/Merge-Games-for-Playnite
+Description: |
+  Merge duas entradas da biblioteca do Playnite em uma única entrada, permitindo escolher
+  campo por campo o que deve ser preservado. Inclui soma de tempo jogado, união de ROMs
+  e metadados, backup automático e suporte adicional ao Extra Metadata Loader.
+Tags:
+  - Library
+  - Utility
+  - Metadata
+IconUrl: https://raw.githubusercontent.com/oDaVy-gg/Merge-Games-for-Playnite/main/icon.png
