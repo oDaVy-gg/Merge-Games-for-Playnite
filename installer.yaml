@@ -1,0 +1,10 @@
+AddonId: MergeGames_8f04d1df-90af-43ef-a0d0-f23e6514f6f9
+Packages:
+  - Version: 0.1.5
+    ReleaseDate: 2026-10-04
+    PackageUrl: https://raw.githubusercontent.com/oDaVy-gg/Merge-Games-for-Playnite/main/dist/MergeGames_Playnite_0_1_5.pext
+    Changelog:
+      - Adiciona ícone próprio da extensão.
+      - Atualiza autoria para OpenAI e oDaVy_gg.
+      - Preserva integração com Extra Metadata Loader.
+      - Mantém mesclagem de metadados, ROMs e histórico.
