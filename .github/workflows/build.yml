@@ -1,0 +1,48 @@
+name: Build Playnite package
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'srcparts/**'
+      - 'icon.svg'
+      - 'extension.yaml'
+      - '.github/workflows/build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    if: ${{ !contains(github.event.head_commit.message || '', '[skip build]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rebuild source
+        run: cat srcparts/MergeGames.part*.ps1 > MergeGames.psm1
+
+      - name: Render icon
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq librsvg2-bin
+          rsvg-convert -w 256 -h 256 icon.svg -o icon.png
+
+      - name: Build .pext
+        run: |
+          mkdir -p dist
+          rm -f dist/MergeGames_Playnite_0_1_5.pext
+          zip -q -9 -j dist/MergeGames_Playnite_0_1_5.pext extension.yaml MergeGames.psm1 icon.png
+          sha256sum dist/MergeGames_Playnite_0_1_5.pext > SHA256SUMS.txt
+
+      - name: Commit generated files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add MergeGames.psm1 icon.png dist/MergeGames_Playnite_0_1_5.pext SHA256SUMS.txt
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "Build v0.1.5 package [skip build]"
+          git push
