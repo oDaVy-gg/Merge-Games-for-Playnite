@@ -1,0 +1,6 @@
+# Local / build files
+*.tmp
+*.log
+*.bak
+.vscode/
+.idea/
