@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    TEMPLATE DE REFERÊNCIA.
+    Gere o projeto oficial com o Toolbox do Playnite 11 e preserve as
+    referências/nuget.config geradas por ele; depois aplique estas opções.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+</Project>
