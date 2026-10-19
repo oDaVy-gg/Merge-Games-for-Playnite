@@ -4,7 +4,7 @@
 
 **Merge Games** é uma extensão para **Playnite 10.x** que permite mesclar duas entradas de jogos em uma única entrada, escolhendo o que deve ser preservado de cada jogo.
 
-> **Status:** beta pública (`v0.1.5`). Esta versão usa a API de extensões PowerShell do Playnite 10.x.
+> **Status:** beta pública (`v0.1.6`). Esta versão usa a API de extensões PowerShell do Playnite 10.x.
 
 ## Recursos
 
@@ -20,10 +20,11 @@
 - Backup automático antes da mesclagem.
 - Opção segura de ocultar a entrada secundária em vez de excluí-la.
 - Ferramenta de reparo para integração com Extra Metadata Loader.
+- Seletor de múltiplas ROMs com **apenas o Nome da ROM** no Desktop e no Fullscreen, quando isso não gera ambiguidade.
 
 ## Instalação
 
-**[Baixar Merge Games v0.1.5 (.pext)](https://raw.githubusercontent.com/oDaVy-gg/Merge-Games-for-Playnite/main/dist/MergeGames_Playnite_0_1_5.pext)**
+**[Baixar Merge Games v0.1.6 (.pext)](https://raw.githubusercontent.com/oDaVy-gg/Merge-Games-for-Playnite/main/dist/MergeGames_Playnite_0_1_6.pext)**
 
 Depois, execute o arquivo ou arraste-o para a janela do Playnite em modo Desktop e confirme a instalação.
 
