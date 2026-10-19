@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.6 — 2026-10-18
+
+- Exibe somente o **Nome da ROM** no seletor de versões quando cada ROM corresponde a uma única ação.
+- Aplica os nomes curtos tanto no modo Desktop quanto no Fullscreen.
+- Mantém ROM, caminho, perfil de emulador e ações armazenadas sem alterações; a mudança é apenas visual e temporária.
+- Mantém o rótulo original do Playnite quando remover o prefixo criaria opções ambíguas, como múltiplos perfis para a mesma ROM.
+
 ## 0.1.5 — 2026-10-04
 
 - Adiciona ícone próprio da extensão.
