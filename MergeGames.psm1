@@ -1,6 +1,220 @@
 ﻿# Merge Games for Playnite 10.x
 # Select exactly two games in Desktop mode, right-click and choose "Mesclar jogos...".
-# Version 0.1.4
+# Version 0.1.6
+
+# Short ROM labels in Playnite's native action selector.
+#
+# Playnite 10 builds multi-ROM action labels as "<action name>: <ROM name>".
+# Merge Games keeps the native ROM/action model intact and only changes the
+# temporary selector presentation. Desktop and Fullscreen use different
+# selector windows, so the hook handles both without writing anything back to
+# the game database.
+function Get-MGRomPathKey {
+    param([string]$Path)
+
+    if ([string]::IsNullOrWhiteSpace($Path)) { return "" }
+    try {
+        return $Path.Trim().Trim([char]34).Replace("/", [string][System.IO.Path]::DirectorySeparatorChar).ToLowerInvariant()
+    }
+    catch {
+        return ([string]$Path).ToLowerInvariant()
+    }
+}
+
+function Get-MGActionRomPath {
+    param($Action)
+
+    if ($null -eq $Action) { return $null }
+    try {
+        $property = $Action.PSObject.Properties["SelectedRomPath"]
+        if ($null -eq $property) { return $null }
+        return [string]$property.Value
+    }
+    catch {
+        return $null
+    }
+}
+
+function Get-MGActionFromSelectorEntry {
+    param($Entry)
+
+    if ($null -eq $Entry) { return $null }
+
+    try {
+        $property = $Entry.PSObject.Properties["Item"]
+        if ($null -ne $property) { return $property.Value }
+    }
+    catch { }
+
+    try {
+        $property = $Entry.PSObject.Properties["Value"]
+        if ($null -ne $property) { return $property.Value }
+    }
+    catch { }
+
+    return $null
+}
+
+function Get-MGSelectorActions {
+    param($Window)
+
+    $result = @()
+    if ($null -eq $Window) { return @($result) }
+
+    try {
+        $windowType = $Window.GetType().FullName
+        $dataContext = $Window.DataContext
+        if ($null -eq $dataContext) { return @($result) }
+
+        if ($windowType -eq "Playnite.DesktopApp.Windows.ActionSelectionWindow") {
+            foreach ($entry in @($dataContext.Actions)) {
+                $action = Get-MGActionFromSelectorEntry $entry
+                if ($null -ne $action) { $result += $action }
+            }
+        }
+        elseif ($windowType -eq "Playnite.FullscreenApp.Windows.SingleItemSelectionWindow") {
+            foreach ($entry in @($dataContext.Items)) {
+                $action = Get-MGActionFromSelectorEntry $entry
+                if ($null -ne $action) { $result += $action }
+            }
+        }
+    }
+    catch { }
+
+    return @($result)
+}
+
+function Get-MGRomShortDisplayName {
+    param($Action, $Window)
+
+    $romPath = Get-MGActionRomPath $Action
+    $romPathKey = Get-MGRomPathKey $romPath
+    if ([string]::IsNullOrWhiteSpace($romPathKey)) { return $null }
+
+    # If one ROM path appears more than once in the selector, the prefix is
+    # carrying useful information (for example, two emulator profiles).
+    # Keep Playnite's original labels instead of creating ambiguous duplicates.
+    $pathCounts = @{}
+    foreach ($candidateAction in @(Get-MGSelectorActions $Window)) {
+        $candidatePath = Get-MGActionRomPath $candidateAction
+        $candidateKey = Get-MGRomPathKey $candidatePath
+        if ([string]::IsNullOrWhiteSpace($candidateKey)) { continue }
+
+        if ($pathCounts.ContainsKey($candidateKey)) {
+            $pathCounts[$candidateKey] = [int]$pathCounts[$candidateKey] + 1
+        }
+        else {
+            $pathCounts[$candidateKey] = 1
+        }
+    }
+
+    if ($pathCounts.Count -lt 2) { return $null }
+    foreach ($count in $pathCounts.Values) {
+        if ([int]$count -ne 1) { return $null }
+    }
+
+    $names = @{}
+
+    # The currently selected game is normally the one being launched. Prefer
+    # it first so the common path does not scan the entire library.
+    $selectedGames = @()
+    try { $selectedGames = @($PlayniteApi.MainView.SelectedGames) } catch { }
+
+    foreach ($game in $selectedGames) {
+        try {
+            if (@($game.Roms).Count -le 1) { continue }
+            foreach ($rom in @($game.Roms)) {
+                if ((Get-MGRomPathKey ([string]$rom.Path)) -eq $romPathKey) {
+                    $name = [string]$rom.Name
+                    if (-not [string]::IsNullOrWhiteSpace($name)) {
+                        $names[$name.ToLowerInvariant()] = $name
+                    }
+                }
+            }
+        }
+        catch { }
+    }
+
+    # Fallback for cases where the launched game is not the sole current
+    # MainView selection (possible in Desktop mode).
+    if ($names.Count -eq 0) {
+        try {
+            foreach ($game in $PlayniteApi.Database.Games) {
+                if (@($game.Roms).Count -le 1) { continue }
+                foreach ($rom in @($game.Roms)) {
+                    if ((Get-MGRomPathKey ([string]$rom.Path)) -eq $romPathKey) {
+                        $name = [string]$rom.Name
+                        if (-not [string]::IsNullOrWhiteSpace($name)) {
+                            $names[$name.ToLowerInvariant()] = $name
+                        }
+                    }
+                }
+            }
+        }
+        catch { }
+    }
+
+    if ($names.Count -ne 1) { return $null }
+    return [string]($names.Values | Select-Object -First 1)
+}
+
+function Invoke-MGRomDisplayButtonLoaded {
+    param($Button)
+
+    if ($null -eq $Button) { return }
+
+    try {
+        $window = [System.Windows.Window]::GetWindow($Button)
+        if ($null -eq $window) { return }
+
+        $windowType = $window.GetType().FullName
+        if ($windowType -ne "Playnite.DesktopApp.Windows.ActionSelectionWindow" -and
+            $windowType -ne "Playnite.FullscreenApp.Windows.SingleItemSelectionWindow") {
+            return
+        }
+
+        $action = Get-MGActionFromSelectorEntry $Button.DataContext
+        $shortName = Get-MGRomShortDisplayName $action $window
+        if ([string]::IsNullOrWhiteSpace([string]$shortName)) { return }
+
+        if ($windowType -eq "Playnite.DesktopApp.Windows.ActionSelectionWindow") {
+            # ActionSelectionWindow binds its text directly to Item.Name.
+            # The action object is a temporary clone produced for this launch;
+            # changing its Name does not change the stored Playnite GameAction.
+            try { $action.Name = $shortName } catch { }
+        }
+        else {
+            # Fullscreen copies action.Name into a read-only wrapper before
+            # showing the selector. Override only the realized button content;
+            # virtualized buttons receive the same hook when they are loaded.
+            try { $Button.Content = $shortName } catch { }
+        }
+    }
+    catch { }
+}
+
+function Register-MGRomDisplayHook {
+    $flagName = "MergeGames.RomOnlySelectorLabels.v016"
+    try {
+        $domain = [System.AppDomain]::CurrentDomain
+        if ($domain.GetData($flagName)) { return }
+
+        $script:MGRomDisplayButtonLoadedHandler = [System.Windows.RoutedEventHandler]{
+            param($sender, $eventArgs)
+            try { Invoke-MGRomDisplayButtonLoaded $sender } catch { }
+        }
+
+        [System.Windows.EventManager]::RegisterClassHandler(
+            [System.Windows.Controls.Button],
+            [System.Windows.FrameworkElement]::LoadedEvent,
+            $script:MGRomDisplayButtonLoadedHandler,
+            $true)
+
+        $domain.SetData($flagName, $true)
+    }
+    catch { }
+}
+
 
 
 function Get-MGThemeBrush {
@@ -1022,6 +1236,11 @@ function GetGameMenuItems {
     $repairItem.MenuSection = "Merge Games"
 
     return @($item, $repairItem)
+}
+
+function OnApplicationStarted()
+{
+    Register-MGRomDisplayHook
 }
 
 # Playnite resolves menu actions by exported command name. In v0.1.1 only the two
