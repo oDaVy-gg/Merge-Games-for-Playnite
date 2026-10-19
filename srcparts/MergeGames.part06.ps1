@@ -124,6 +124,11 @@ function GetGameMenuItems {
     return @($item, $repairItem)
 }
 
+function OnApplicationStarted()
+{
+    Register-MGRomDisplayHook
+}
+
 # Playnite resolves menu actions by exported command name. In v0.1.1 only the two
 # public entry points were exported. On some Playnite 10 builds the exported
 # action is invoked outside the module-private command lookup, so helper
