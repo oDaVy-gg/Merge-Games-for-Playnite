@@ -1,1 +1,1 @@
-57d3a756eeb0c252e45d697e57876228f8dd86813723f694a1b54a42e32d8f61  dist/MergeGames_Playnite_0_1_5.pext
+152cc9eafb07cb7cffd3749833edd4ff298e2813d8add6fde157fa9fb12793e0  dist/MergeGames_Playnite_0_1_6.pext
